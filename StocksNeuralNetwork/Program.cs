@@ -8,19 +8,29 @@ namespace StocksNeuralNetwork
         static void Main(string[] args)
         {
             Console.Title = "Stocks Neural Network";
-            Console.WriteLine("Stage 1 init master controller");
+            Console.WriteLine("Handover to master");
+            Manager.main();
             Console.ReadLine();
         }
     }
+
+    public class Manager
+    {
+        public static void main()
+        {
+            //TODO
+        }
+    }
+
     public class NeuralNetwork : IComparable<NeuralNetwork>
     {
-        //Neural Network variables
+        //Neural Network critical variables / data
         private int[] layers;
         private float[][] neurons;
         private float[][][] weights;
         private float fitness;
 
-        public NeuralNetwork()
+        public NeuralNetwork(int[] layers)
         {
             //Init layers
             this.layers = new int[layers.Length];
@@ -34,7 +44,7 @@ namespace StocksNeuralNetwork
             InitWeights();
         }
 
-        //For copying other networks
+        //For copying other networks, literally a copy paste of NeuralNetwork(int[] layers) with copy weights
         public NeuralNetwork(NeuralNetwork copyNetwork)
         {
             this.layers = new int[copyNetwork.layers.Length];
@@ -48,6 +58,7 @@ namespace StocksNeuralNetwork
             CopyWeights(copyNetwork.weights);
         }
 
+        //When copying other networks, merge its weights with this
         private void CopyWeights(float[][][] copyWeights)
         {
             for (int i = 0; i < weights.Length; i++)
