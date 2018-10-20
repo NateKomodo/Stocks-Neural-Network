@@ -8,7 +8,7 @@ namespace StocksNeuralNetwork
         static void Main(string[] args)
         {
             Console.Title = "Stocks Neural Network";
-            Console.WriteLine("Stocks post brexit: £0");
+            Console.WriteLine("Stage 1 init master controller");
             Console.ReadLine();
         }
     }
