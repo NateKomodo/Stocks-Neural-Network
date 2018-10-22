@@ -25,13 +25,13 @@ namespace StocksNeuralNetwork
         private int[] layers = new int[] { 1, 10, 10, 1 }; //1 input and 1 output
         private List<NeuralNetwork> nets;
         private float[] inputs;
-        private float[] lookingFor;
+        private float[] targets;
 
         //Entry point, configure inputs and call update
         public Manager(float[] inData, float[] trainingTargets, bool training, String networkFilePath)
         {
             inputs = inData;
-            lookingFor = trainingTargets;
+            targets = trainingTargets;
             if (training)
             {
                 Update();
@@ -70,10 +70,78 @@ namespace StocksNeuralNetwork
 
                 //Increase genertation
                 generationNumber++;
-                Console.WriteLine("");
-                Console.ReadLine();
+                Console.WriteLine();
+                if (generationNumber == 1 || generationNumber % 100 == 0)
+                {
+                    Console.Write("[S]ave best, [E]volve all, [C]hange or check inputs and targets => ");
+                    String input = Console.ReadLine().ToLower();
+                    if (input == "c" )
+                    {
+                        changeInputTarget();
+                    }
+                    else if (input == "s")
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("Enter file path to save to");
+                        String path = Console.ReadLine();
+                        saveBestNetwork(path);
+                    }
+                }
                 Update();
             }
+        }
+
+        private void changeInputTarget()
+        {
+            Console.WriteLine();
+            Console.WriteLine("To change neuron counts, do so in the programs source. It cannot be hot-swapped");
+            Console.WriteLine("Current input values:");
+            for (int i = 0; i < layers[0]; i++)
+            {
+                Console.WriteLine("Input " + i + ": " + inputs[i]);
+            }
+            Console.WriteLine("Current target values:");
+            for (int i = 0; i < layers[layers.Length - 1]; i++)
+            {
+                Console.WriteLine("Target " + i + ": " + targets[i]);
+            }
+            for (int i = 0; i < layers[0]; i++)
+            {
+                Console.WriteLine(System.Environment.NewLine + "Enter input " + i);
+                String newInput = Console.ReadLine();
+                float n;
+                bool isNumeric = float.TryParse(newInput, out n);
+                if (isNumeric)
+                {
+                    inputs[i] = float.Parse(newInput);
+                    Console.WriteLine("Updated input " + i);
+                }
+                else
+                {
+                    Console.WriteLine("Input invalid, leaving as original");
+                }
+            }
+            for (int i = 0; i < layers[layers.Length - 1]; i++)
+            {
+                Console.WriteLine(System.Environment.NewLine + "Enter target " + i);
+                String newInput = Console.ReadLine();
+                float n;
+                bool isNumeric = float.TryParse(newInput, out n);
+                if (isNumeric)
+                {
+                    targets[i] = float.Parse(newInput);
+                    Console.WriteLine("Updated target " + i);
+                }
+                else
+                {
+                    Console.WriteLine("Input invalid, leaving as original");
+                }
+            }
+        }
+
+        private void saveBestNetwork(string path)
+        {
+            throw new NotImplementedException();
         }
 
         void calculateFitness()
@@ -85,7 +153,7 @@ namespace StocksNeuralNetwork
                 for (int j = 0; j < output.Length; j++)
                 {
                     float actual = (float)output[j];
-                    float target = (float)lookingFor[j];
+                    float target = (float)targets[j];
                     float dif = target - actual;
                     float abs = Math.Abs(dif);
                     float fitToAdd = 1 - abs;
