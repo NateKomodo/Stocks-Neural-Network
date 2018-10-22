@@ -8,10 +8,73 @@ namespace StocksNeuralNetwork
         static void Main(string[] args)
         {
             Console.Title = "Stocks Neural Network";
-            Console.WriteLine("Handover to master");
-            float[] input = { 10f };
-            float[] target = { 0.5f };
-            new Manager(input, target, true, null);
+            Console.WriteLine("CONFIGURATION"); //Configure program
+            float[] input = { };
+            float[] target = { };
+            bool training = false;
+            string path = null;
+            int[] layers = { 1, 10, 10, 1 };
+            int popSize = 50;
+
+            Console.WriteLine("Training? (y/n)");
+            String userTraining = Console.ReadLine();
+            if (userTraining == "n") { training = false; } else { training = true; }
+
+            if (!training) { Console.WriteLine("Enter path to neural net"); path = Console.ReadLine(); }
+
+            Console.WriteLine("Population size? (should be even, or will be 20)");
+            String userPop = Console.ReadLine();
+            int s;
+            bool isNumeric1 = int.TryParse(userPop, out s);
+            if (isNumeric1) { popSize = int.Parse(userPop); } else { Console.WriteLine("Invalid input, using 50"); }
+
+            Console.WriteLine("How many inputs?");
+            String inputCount = Console.ReadLine();
+            int n;
+            bool isNumeric = int.TryParse(inputCount, out n);
+            if (isNumeric) { layers[0] = int.Parse(inputCount); } else { Console.WriteLine("Invalid input, using 1"); }
+
+            Console.WriteLine("How many outputs?");
+            String outputCount = Console.ReadLine();
+            int o;
+            bool isNumeric2 = int.TryParse(outputCount, out o);
+            if (isNumeric2) { layers[3] = int.Parse(outputCount); } else { Console.WriteLine("Invalid input, using 1"); }
+
+            for (int i = 0; i < layers[0]; i++) //Fix this
+            {
+                Console.WriteLine("Enter input " + i);
+                String newInput = Console.ReadLine();
+                float p;
+                bool isNumeric3 = float.TryParse(newInput, out p);
+                if (isNumeric3)
+                {
+                    input[i] = float.Parse(newInput);
+                    Console.WriteLine("Updated input " + i);
+                }
+                else
+                {
+                    Console.WriteLine("Input invalid, leaving as null");
+                }
+            }
+            for (int i = 0; i < layers[layers.Length - 1]; i++) //Fix this
+            {
+                Console.WriteLine("Enter target " + i);
+                String newInput = Console.ReadLine();
+                float q;
+                bool isNumeric4 = float.TryParse(newInput, out q);
+                if (isNumeric4)
+                {
+                    target[i] = float.Parse(newInput);
+                    Console.WriteLine("Updated target " + i);
+                }
+                else
+                {
+                    Console.WriteLine("Input invalid, leaving as null");
+                }
+            }
+
+            Console.WriteLine("Starting..." + System.Environment.NewLine);
+            new Manager(input, target, training, @path, layers, popSize);
             Console.ReadLine();
         }
     }
@@ -28,17 +91,36 @@ namespace StocksNeuralNetwork
         private float[] targets;
 
         //Entry point, configure inputs and call update
-        public Manager(float[] inData, float[] trainingTargets, bool training, String networkFilePath)
+        public Manager(float[] inData, float[] trainingTargets, bool training, String networkFilePath, int[] layersIn, int PopSize)
         {
             inputs = inData;
             targets = trainingTargets;
+            populationSize = PopSize;
+            layers = layersIn;
             if (training)
             {
                 Update();
             }
             else
             {
-                //TODO read network data from file, build it, and feed through
+                //Use preexising network
+                Console.WriteLine();
+                Console.WriteLine("Using pre-existing network at " + networkFilePath);
+                Console.WriteLine("Layers should be the same, if not, you will encounter issues");
+                NeuralNetwork net = new NeuralNetwork(layers);
+                net.loadNetwork(networkFilePath);
+                Console.WriteLine("Loaded network");
+                while (true)
+                {
+                    float[] output = net.FeedForward(inputs);
+                    for (int i = 0; i < output.Length; i++)
+                    {
+                        Console.WriteLine("Output " + i + ": " + output[i]);
+                    }
+                    Console.ReadLine();
+                    Console.WriteLine("Running input changer...");
+                    changeInputTarget();
+                }
             }
         }
 
@@ -84,14 +166,14 @@ namespace StocksNeuralNetwork
                         Console.WriteLine();
                         Console.WriteLine("Enter file path to save to");
                         String path = Console.ReadLine();
-                        saveBestNetwork(path);
+                        nets[populationSize - 1].saveNetwork(path);
                     }
                 }
                 Update();
             }
         }
 
-        private void changeInputTarget()
+        private void changeInputTarget() //Change input and target variables
         {
             Console.WriteLine();
             Console.WriteLine("To change neuron counts, do so in the programs source. It cannot be hot-swapped");
@@ -139,12 +221,7 @@ namespace StocksNeuralNetwork
             }
         }
 
-        private void saveBestNetwork(string path)
-        {
-            throw new NotImplementedException();
-        }
-
-        void calculateFitness()
+        void calculateFitness() //Calculate fitness of networks
         {
             for (int i = 0; i < populationSize; i++)
             {
@@ -231,6 +308,58 @@ namespace StocksNeuralNetwork
             InitNeurons();
             InitWeights();
             CopyWeights(copyNetwork.weights);
+        }
+
+        //save the network to file
+        public void saveNetwork(string path)
+        {
+            if (System.IO.File.Exists(path))
+            {
+                Console.WriteLine("File exists, choose another path");
+                return;
+            }
+            System.IO.File.Create(path).Close();
+            for (int i = 0; i < weights.Length; i++)
+            {
+                for (int j = 0; j < weights[i].Length; j++)
+                {
+                    for (int k = 0; k < weights[i][j].Length; k++)
+                    {
+                        using (System.IO.StreamWriter file = new System.IO.StreamWriter(@path, true))
+                        {
+                            file.WriteLine(weights[i][j][k]);
+                        }
+                    }
+                }
+            }
+        }
+
+        //save the network to file
+        public void loadNetwork(string path)
+        {
+            if (!System.IO.File.Exists(path))
+            {
+                Console.WriteLine("File does not exists");
+                return;
+            }
+            for (int i = 0; i < weights.Length; i++)
+            {
+                for (int j = 0; j < weights[i].Length; j++)
+                {
+                    for (int k = 0; k < weights[i][j].Length; k++)
+                    {
+                        int counter = 0;
+                        string line;
+                        System.IO.StreamReader file = new System.IO.StreamReader(@path);
+                        while ((line = file.ReadLine()) != null)
+                        {
+                            weights[i][j][k] = float.Parse(line);
+                            counter++;
+                        }
+                        file.Close();
+                    }
+                }
+            }
         }
 
         //When copying other networks, merge its weights with this
