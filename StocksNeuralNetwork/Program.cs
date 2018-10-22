@@ -16,6 +16,7 @@ namespace StocksNeuralNetwork
 
     public class Manager
     {
+        //Variables for managing networks
         private bool isTraning = false;
         private int populationSize = 50;
         private int generationNumber = 0;
@@ -23,6 +24,7 @@ namespace StocksNeuralNetwork
         private List<NeuralNetwork> nets;
         private static float[] inputs;
 
+        //Entry point, configure inputs and call update
         public Manager(float[] inData)
         {
             inputs = inData;
@@ -60,12 +62,15 @@ namespace StocksNeuralNetwork
             }
         }
 
+        //Feed forward and print result
         private void printNetValues()
         {
             for (int i = 0; i < populationSize; i++)
             {
                 float[] output = nets[i].FeedForward(inputs);
+                Console.WriteLine("Net " + i + ": " + output);
             }
+            isTraning = false;
         }
 
         private void InitNeuralNetworks() //First time setup
@@ -150,7 +155,7 @@ namespace StocksNeuralNetwork
             neurons = neuronsList.ToArray(); //convert list to array
         }
 
-        /// Create weights matrix.
+        //Create weights matrix.
         private void InitWeights()
         {
             List<float[][]> weightsList = new List<float[][]>(); //weights list which will later will converted into a weights 3D array
@@ -208,7 +213,6 @@ namespace StocksNeuralNetwork
         }
 
         /// Mutate neural network weights
-        /// </summary>
         public void Mutate()
         {
             for (int i = 0; i < weights.Length; i++)
@@ -282,6 +286,7 @@ namespace StocksNeuralNetwork
                 return 0;
         }
 
+        //Generate a random float
         public float GetRandomNumber(float minimum, float maximum)
         {
             Random random = new Random();
