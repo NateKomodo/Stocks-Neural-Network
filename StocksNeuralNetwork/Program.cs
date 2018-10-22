@@ -9,7 +9,9 @@ namespace StocksNeuralNetwork
         {
             Console.Title = "Stocks Neural Network";
             Console.WriteLine("Handover to master");
-            new Manager(null);
+            float[] input = { 10f };
+            float[] target = { 0.5f };
+            new Manager(input, target, true, null);
             Console.ReadLine();
         }
     }
@@ -22,13 +24,22 @@ namespace StocksNeuralNetwork
         private int generationNumber = 0;
         private int[] layers = new int[] { 1, 10, 10, 1 }; //1 input and 1 output
         private List<NeuralNetwork> nets;
-        private static float[] inputs;
+        private float[] inputs;
+        private float[] lookingFor;
 
         //Entry point, configure inputs and call update
-        public Manager(float[] inData)
+        public Manager(float[] inData, float[] trainingTargets, bool training, String networkFilePath)
         {
             inputs = inData;
-            Update();
+            lookingFor = trainingTargets;
+            if (training)
+            {
+                Update();
+            }
+            else
+            {
+                //TODO read network data from file, build it, and feed through
+            }
         }
 
         void Update()
@@ -41,7 +52,9 @@ namespace StocksNeuralNetwork
                 }
                 else
                 {
+                    calculateFitness();
                     nets.Sort();
+                    printNetValues();
                     for (int i = 0; i < populationSize / 2; i++) //Loop through the population, mutating the best ones
                     {
                         nets[i] = new NeuralNetwork(nets[i + (populationSize / 2)]);
@@ -55,22 +68,45 @@ namespace StocksNeuralNetwork
                     }
                 }
 
-                //Increase genertation and set isTraining
+                //Increase genertation
                 generationNumber++;
-                isTraning = true;
-                printNetValues();
+                Console.WriteLine("");
+                Console.ReadLine();
+                Update();
             }
         }
 
-        //Feed forward and print result
-        private void printNetValues()
+        void calculateFitness()
         {
             for (int i = 0; i < populationSize; i++)
             {
                 float[] output = nets[i].FeedForward(inputs);
-                Console.WriteLine("Net " + i + ": " + output);
+                float fit = 0;
+                for (int j = 0; j < output.Length; j++)
+                {
+                    float actual = (float)output[j];
+                    float target = (float)lookingFor[j];
+                    float dif = target - actual;
+                    float abs = Math.Abs(dif);
+                    float fitToAdd = 1 - abs;
+                    fit += fitToAdd;
+                }
+                //Console.WriteLine(fit);
+                nets[i].SetFitness(fit);
             }
-            isTraning = false;
+        }
+
+        //Feed forward and print result
+        void printNetValues()
+        {
+            Console.WriteLine("Generation " + generationNumber);
+            float[] output = nets[populationSize - 1].FeedForward(inputs);
+            Console.WriteLine("Current best network values: ");
+            for (int j = 0; j < output.Length; j++)
+            {
+                Console.WriteLine("Output " + j + ": " + output[j]);
+            }
+            Console.WriteLine("Fitness: " + nets[populationSize - 1].GetFitness());
         }
 
         private void InitNeuralNetworks() //First time setup
