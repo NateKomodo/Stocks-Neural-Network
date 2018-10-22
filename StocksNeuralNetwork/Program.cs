@@ -9,16 +9,82 @@ namespace StocksNeuralNetwork
         {
             Console.Title = "Stocks Neural Network";
             Console.WriteLine("Handover to master");
-            Manager.main();
+            new Manager(null);
             Console.ReadLine();
         }
     }
 
     public class Manager
     {
-        public static void main()
+        private bool isTraning = false;
+        private int populationSize = 50;
+        private int generationNumber = 0;
+        private int[] layers = new int[] { 1, 10, 10, 1 }; //1 input and 1 output
+        private List<NeuralNetwork> nets;
+        private static float[] inputs;
+
+        public Manager(float[] inData)
         {
-            //TODO
+            inputs = inData;
+            Update();
+        }
+
+        void Update()
+        {
+            if (isTraning == false)
+            {
+                if (generationNumber == 0) //Perform first time creation if its gen 0
+                {
+                    InitNeuralNetworks();
+                }
+                else
+                {
+                    nets.Sort();
+                    for (int i = 0; i < populationSize / 2; i++) //Loop through the population, mutating the best ones
+                    {
+                        nets[i] = new NeuralNetwork(nets[i + (populationSize / 2)]);
+                        nets[i].Mutate();
+                        nets[i + (populationSize / 2)] = new NeuralNetwork(nets[i + (populationSize / 2)]);
+                    }
+
+                    for (int i = 0; i < populationSize; i++) //Reset fitness
+                    {
+                        nets[i].SetFitness(0f);
+                    }
+                }
+
+                //Increase genertation and set isTraining
+                generationNumber++;
+                isTraning = true;
+                printNetValues();
+            }
+        }
+
+        private void printNetValues()
+        {
+            for (int i = 0; i < populationSize; i++)
+            {
+                float[] output = nets[i].FeedForward(inputs);
+            }
+        }
+
+        private void InitNeuralNetworks() //First time setup
+        {
+            //population must be even, just setting it to 20 incase it's not
+            if (populationSize % 2 != 0)
+            {
+                populationSize = 20;
+            }
+
+            nets = new List<NeuralNetwork>(); //Init nets list
+
+
+            for (int i = 0; i < populationSize; i++) //Populate nets with neural nets
+            {
+                NeuralNetwork net = new NeuralNetwork(layers);
+                net.Mutate();
+                nets.Add(net);
+            }
         }
     }
 
