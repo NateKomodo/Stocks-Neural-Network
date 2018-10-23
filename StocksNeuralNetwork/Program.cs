@@ -32,15 +32,14 @@ namespace StocksNeuralNetwork
             String inputCount = Console.ReadLine();
             int n;
             bool isNumeric = int.TryParse(inputCount, out n);
-            if (isNumeric) { layers[0] = int.Parse(inputCount); } else { Console.WriteLine("Invalid input, using 1"); }
+            if (isNumeric) { layers[0] = int.Parse(inputCount); Array.Resize(ref input, int.Parse(inputCount)); } else { Console.WriteLine("Invalid input, using 1"); Array.Resize(ref input, 1); }
 
             Console.WriteLine("How many outputs?");
             String outputCount = Console.ReadLine();
             int o;
             bool isNumeric2 = int.TryParse(outputCount, out o);
-            if (isNumeric2) { layers[3] = int.Parse(outputCount); } else { Console.WriteLine("Invalid input, using 1"); }
-
-            for (int i = 0; i < layers[0]; i++) //Fix this
+            if (isNumeric2) { layers[3] = int.Parse(outputCount); Array.Resize(ref target, int.Parse(outputCount)); } else { Console.WriteLine("Invalid input, using 1"); Array.Resize(ref target, 1); }
+            for (int i = 0; i < layers[0]; i++)
             {
                 Console.WriteLine("Enter input " + i);
                 String newInput = Console.ReadLine();
@@ -56,7 +55,7 @@ namespace StocksNeuralNetwork
                     Console.WriteLine("Input invalid, leaving as null");
                 }
             }
-            for (int i = 0; i < layers[layers.Length - 1]; i++) //Fix this
+            for (int i = 0; i < layers[layers.Length - 1]; i++)
             {
                 Console.WriteLine("Enter target " + i);
                 String newInput = Console.ReadLine();
@@ -160,6 +159,7 @@ namespace StocksNeuralNetwork
                     if (input == "c" )
                     {
                         changeInputTarget();
+                        Console.ReadLine();
                     }
                     else if (input == "s")
                     {
@@ -167,6 +167,7 @@ namespace StocksNeuralNetwork
                         Console.WriteLine("Enter file path to save to");
                         String path = Console.ReadLine();
                         nets[populationSize - 1].saveNetwork(path);
+                        Console.ReadLine();
                     }
                 }
                 Update();
