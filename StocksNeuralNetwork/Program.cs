@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace StocksNeuralNetwork
 {
@@ -28,31 +29,45 @@ namespace StocksNeuralNetwork
             bool isNumeric1 = int.TryParse(userPop, out s);
             if (isNumeric1) { popSize = int.Parse(userPop); } else { Console.WriteLine("Invalid input, using 50"); }
 
-            Console.WriteLine("How many inputs?");
+            Console.WriteLine("How many inputs? Or 'F' for file input.");
             String inputCount = Console.ReadLine();
             int n;
+            var isFileInput = false;
             bool isNumeric = int.TryParse(inputCount, out n);
-            if (isNumeric) { layers[0] = int.Parse(inputCount); Array.Resize(ref input, int.Parse(inputCount)); } else { Console.WriteLine("Invalid input, using 1"); Array.Resize(ref input, 1); }
+            if (isNumeric) { layers[0] = int.Parse(inputCount); Array.Resize(ref input, int.Parse(inputCount)); }
+            else
+            {
+                Console.WriteLine("Filename?");
+                var inputFile = Console.ReadLine();
+                if (string.IsNullOrEmpty(inputFile)) inputFile = @".\TestInput.txt";
+                if (!File.Exists(inputFile)) throw new FileNotFoundException(inputFile);
+                Manager.LoadFileIntoArray(ref input, inputFile);
+                layers[0] = input.Length;
+                isFileInput = true;
+            }
 
             Console.WriteLine("How many outputs?");
             String outputCount = Console.ReadLine();
             int o;
             bool isNumeric2 = int.TryParse(outputCount, out o);
             if (isNumeric2) { layers[3] = int.Parse(outputCount); Array.Resize(ref target, int.Parse(outputCount)); } else { Console.WriteLine("Invalid input, using 1"); Array.Resize(ref target, 1); }
-            for (int i = 0; i < layers[0]; i++)
+            if (!isFileInput)
             {
-                Console.WriteLine("Enter input " + i);
-                String newInput = Console.ReadLine();
-                float p;
-                bool isNumeric3 = float.TryParse(newInput, out p);
-                if (isNumeric3)
+                for (int i = 0; i < layers[0]; i++)
                 {
-                    input[i] = float.Parse(newInput);
-                    Console.WriteLine("Updated input " + i);
-                }
-                else
-                {
-                    Console.WriteLine("Input invalid, leaving as null");
+                    Console.WriteLine("Enter input " + i);
+                    String newInput = Console.ReadLine();
+                    float p;
+                    bool isNumeric3 = float.TryParse(newInput, out p);
+                    if (isNumeric3)
+                    {
+                        input[i] = float.Parse(newInput);
+                        Console.WriteLine("Updated input " + i);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Input invalid, leaving as null");
+                    }
                 }
             }
             for (int i = 0; i < layers[layers.Length - 1]; i++)
@@ -273,6 +288,37 @@ namespace StocksNeuralNetwork
                 nets.Add(net);
             }
         }
+
+        /// <summary>
+        /// Parses lines of file as floats and sets up input array.
+        /// </summary>
+        /// <param name="input">Float array to receive file contents.</param>
+        /// <param name="inputFile">Name and path of input file.</param>
+        public static void LoadFileIntoArray(ref float[] input, string inputFile, bool doNotTolerateAnyParsingFails = false)
+        {
+            var fileLines = File.ReadAllLines(inputFile);
+
+            if (fileLines.Length <= 0) throw new FileLoadException($"{inputFile} has no lines.");
+
+            Array.Resize(ref input, fileLines.Length);
+
+            var i = 0;
+            foreach (var line in fileLines)
+            {
+                if (float.TryParse(line, out float read))
+                {
+                    input[i] = read;
+                    i++;
+                }
+                else if (doNotTolerateAnyParsingFails)
+                {
+                    throw new FileLoadException($"{inputFile} has an invalid line {line}.");
+                }
+            }
+
+        }
+
+
     }
 
     public class NeuralNetwork : IComparable<NeuralNetwork>
